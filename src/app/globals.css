@@ -1,0 +1,7 @@
+﻿:root { --bg:#0b0f17; --fg:#e6edf3; --accent:#4f8cff; --card:#131a26; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: ui-sans-serif, system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+a { color: var(--accent); }
+.card { background:var(--card); border:1px solid #1f2937; border-radius:12px; padding:20px; margin:12px 0; }
+.btn { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 16px; cursor:pointer; }
+.input { width:100%; padding:10px; border-radius:8px; border:1px solid #2a3441; background:#0b0f17; color:var(--fg); }
