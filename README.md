@@ -9,6 +9,13 @@
 
 [English](#english) | [中文](#chinese)
 
+![Architecture](docs/architecture.png)
+
+<p align="center"><sub>架构与请求链路：每个 API 强制过 限流 → 短期令牌+设备绑定 → RBAC → 审计。<br>
+组件、端口、阈值均取自 <code>docker-compose.yml</code> 与 <code>src/</code> 源码。</sub></p>
+
+> 📹 30 秒 demo GIF 待补：在能跑 Docker 的机器上执行 `node scripts/capture-demo.mjs` + `python scripts/build_gif.py`（见 [docs/DEMO.md](docs/DEMO.md)）。
+
 ---
 
 ## Chinese
