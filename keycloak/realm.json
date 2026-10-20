@@ -1,0 +1,38 @@
+﻿{
+  "realm": "zerotrust",
+  "enabled": true,
+  "sslRequired": "none",
+  "clients": [
+    {
+      "clientId": "zt-starter",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "zt-secret-1234",
+      "redirectUris": ["http://localhost:3000/api/auth/callback"],
+      "webOrigins": ["http://localhost:3000"],
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "attributes": { "pkce.code.challenge.method": "S256" }
+    }
+  ],
+  "users": [
+    {
+      "username": "demo",
+      "enabled": true,
+      "email": "demo@zerotrust.local",
+      "firstName": "Demo",
+      "lastName": "User",
+      "credentials": [{ "type": "password", "value": "demo1234", "temporary": false }],
+      "realmRoles": ["member"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "member" },
+      { "name": "admin" },
+      { "name": "auditor" }
+    ]
+  }
+}

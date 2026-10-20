@@ -19,10 +19,18 @@
 
 ### 快速开始
 ```bash
-cp .env.example .env        # 填入 OIDC / APP_SECRET / REDIS_URL
-docker compose up --build   # 一键启动 app + postgres + redis + ollama
-# 打开 http://localhost:3000
+# 1. .env 已自带本地 Keycloak 的 OIDC 配置；只需生成 APP_SECRET：
+#    PowerShell:
+#    $b=New-Object byte[] 48; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)
+#    (($b|%{$_.ToString('x2')})-join '')   # 把输出粘到 .env 的 APP_SECRET
+# 2. 启动（内置 Keycloak 自动导入 zerotrust realm，Ollama 自动拉取模型）
+docker compose up --build
+# 3. 打开 http://localhost:3000 → 用 OIDC 登录
+#    测试账号: demo / demo1234
 ```
+> 默认 OIDC 由内置 **Keycloak** 提供，无需注册任何外部账号。
+> 若要换外部 IdP（Auth0/公司 IdP），改 `.env` 的 `OIDC_*` 三项即可。
+> Keycloak 管理台: http://localhost:8080 （admin / admin）
 
 ### 目录结构
 ```

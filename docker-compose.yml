@@ -9,17 +9,23 @@ services:
       - APP_SECRET=${APP_SECRET}
       - DATABASE_URL=postgres://app:app@db:5432/zerotrust
       - REDIS_URL=redis://redis:6379
-      - OIDC_ISSUER=${OIDC_ISSUER}
-      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID}
-      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET}
+      # OIDC 指向本地 Keycloak（启动时自动导入 zerotrust realm）
+      - OIDC_ISSUER=http://keycloak:8080/realms/zerotrust/.well-known/openid-configuration
+      - OIDC_CLIENT_ID=zt-starter
+      - OIDC_CLIENT_SECRET=zt-secret-1234
       - OIDC_REDIRECT_URI=http://localhost:3000/api/auth/callback
       - AI_PROVIDER=ollama
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:7b}
     depends_on:
-      - db
-      - redis
-      - ollama
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      ollama:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
     restart: unless-stopped
 
   db:
@@ -30,10 +36,33 @@ services:
       - POSTGRES_DB=zerotrust
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /realms/zerotrust HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q 200 <&3 && exit 0 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     restart: unless-stopped
 
   ollama:
@@ -43,6 +72,21 @@ services:
     volumes:
       - ollamadata:/root/.ollama
     restart: unless-stopped
+
+  # 首次启动自动拉取模型，避免聊天时报模型不存在
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for i in $(seq 1 30); do
+          if curl -sf http://ollama:11434/api/tags >/dev/null; then break; fi
+          sleep 2
+        done
+        ollama pull ${OLLAMA_MODEL:-qwen2.5:7b}
+    restart: "no"
 
 volumes:
   pgdata:
