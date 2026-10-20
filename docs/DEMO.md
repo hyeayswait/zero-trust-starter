@@ -18,6 +18,12 @@ pip install Pillow
 python scripts/build_gif.py          # 生成 docs/demo.gif，自动压到 <3MB
 ```
 
+生成后把下面这行加进 README（放在徽章下方）即可嵌入：
+
+```markdown
+![demo](docs/demo.gif)
+```
+
 把 `docs/frames/` 拷回拼帧机器即可（`.gitignore` 已忽略该目录，不会误提交）。
 
 ## 录制脚本（capture-demo.mjs 对应的 5 个画面）
