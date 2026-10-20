@@ -86,7 +86,7 @@ docker compose up --build # 一键拉起 app + postgres + redis + ollama
 大多数脚手架把安全当补丁，这个把它当地基。如果你也受够了「先上线再补安全」，
 欢迎试试，也欢迎提 Issue / PR。
 
-⭐ GitHub: <你的仓库地址>
-⭐ Gitee: <你的仓库地址>
+⭐ GitHub: https://github.com/hyeayswait/zero-trust-starter
+⭐ Gitee: https://gitee.com/hbaby-secover/zero-trust-starter
 
 （配 30 秒 demo GIF：登录 → 控制台 → 审计日志 → 本地 AI 助手）
