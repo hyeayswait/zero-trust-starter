@@ -3,3 +3,6 @@
 .env
 *.log
 
+
+docs/frames/
+
