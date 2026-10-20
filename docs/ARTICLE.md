@@ -1,29 +1,92 @@
-﻿# 引流文章骨架：《为什么你的脚手架该默认零信任》
+﻿# 别再自己存密码了：一个「默认零信任」的全栈脚手架
 
-> 用途：发到 掘金 / 知乎 / V2EX / dev.to / Hacker News，引流到 GitHub/Gitee 仓库。
-> 文末放仓库链接 + demo GIF。
+> 本文配套开源项目：Zero-Trust Starter Kit（GitHub / Gitee 链接见文末）。
+> 一句话：它把企业级安全实践做成「开箱默认开启」，让你少踩坑、多睡觉。
 
-## 中文大纲
-1. **痛点**：大多数 starter 把 auth 当补丁——自己存密码、令牌长期有效、没有审计
-2. **三个真实事故**（简写）：令牌泄露、越权访问、无审计追溯
-3. **零信任怎么做**（本仓库实践）：
-   - OIDC + PKCE：身份交给专业 IdP，不碰密码
-   - 15 分钟短令牌 + 设备绑定：被盗也窗口极小
-   - 最小权限 RBAC：新用户默认 member
-   - 全链路审计：每次调用可溯源
-   - 默认安全头：CSP / X-Frame-Options
-4. **AI 助手的合规卖点**：本地优先 Ollama，数据不出内网
-5. **上手**：docker compose up，30 秒跑起来
-6. **CTA**：GitHub/Gitee 链接 + 求 star
+---
 
-## English Outline (for dev.to / HN)
-1. Most starters treat auth as an afterthought
-2. Three failure modes: token leakage, privilege escalation, no traceability
-3. Zero-trust by default (OIDC+PKCE, 15m device-bound JWT, least-privilege RBAC, full audit, secure headers)
-4. Local-first AI assistant (Ollama) — data never leaves your network
-5. `docker compose up` and you are secure-by-default
-6. CTA: repo link + star
+## 一、你写的脚手架，安全吗？
 
-## 标题备选
-- 中文：「别再自己存密码了：一个默认零信任的全栈脚手架」
-- EN: "Stop rolling your own auth: a zero-trust starter that is secure by default"
+几乎所有前端/全栈教程的 starter 都是这样的：
+
+- 注册登录自己写，密码往数据库一存；
+- 登录后发一个 JWT，有效期写成 `7d` 甚至 `30d`；
+- 权限靠 `if (user.role === "admin")` 硬判断；
+- 没有审计，出了问题全靠猜。
+
+这不是你的问题，是「行业默认」的问题。**安全在绝大多数脚手架里是补丁，不是地基。**
+
+而真实世界里，这三件事几乎每年都会出现在大厂的事故复盘里：
+1. **令牌泄露**：长期有效的 JWT 被前端误存、被 XSS 偷走，攻击者横穿内网。
+2. **越权访问**：RBAC 没收敛，普通用户改个参数就拿到管理员接口。
+3. **无法溯源**：出了事翻日志，发现根本没有「谁在什么时候访问了什么」的记录。
+
+## 二、什么是「零信任」
+
+零信任不是某个工具，而是一种假设：**网络内的一切都不可信，每次访问都要验证。**
+
+落到这套脚手架，我做了五件具体的事：
+
+### 1. 身份交给专业 IdP（OIDC + PKCE）
+不自己存密码。登录走标准 OIDC 授权码流程，并启用 PKCE（Proof Key for Code Exchange），
+防止授权码被截获复用。身份由外部身份提供商（Auth0 / Keycloak / 公司 IdP）背书。
+
+> 面试点：为什么不直接存用户名密码？→ 责任分离，密码泄露面从「你的库」缩到「0」。
+
+### 2. 短期令牌 + 设备绑定
+访问令牌 TTL 只有 **15 分钟**，而且签发时绑定了 `deviceId` 上下文。
+服务端校验时不只看「令牌有效」，还要看「这次请求的设备是不是当初签发的设备」。
+会话被盗？窗口极小，且上下文一不一致直接拒绝。
+
+> 面试点：令牌被盗怎么办？→ 短 TTL 缩小爆炸半径 + 设备绑定让重放失效 + 审计告警。
+
+### 3. 默认最小权限 RBAC
+角色到权限是显式映射，新用户默认 `member`，管理员必须**显式提权**才能拿到 `admin`。
+`hasPermission(user, perm)` 是唯一的判断入口，杜绝散落的权限硬判断。
+
+### 4. 全链路审计
+每个 API 调用都记一条：`actor / action / ip / 结果`，持久化到 Postgres
+（数据库挂了也不丢——自动降级到内存）。随时能回答「上周三谁动了管理员接口」。
+
+### 5. 安全头默认开启
+CSP、X-Frame-Options(DENY)、X-Content-Type-Options(nosniff)、Referrer-Policy、
+Permissions-Policy，以及关掉 `X-Powered-By`——都在 `next.config.js` 里写死，
+你忘了也不会裸奔。
+
+## 三、顺手把 AI 助手也做了（而且数据不出内网）
+
+既然都做了「安全默认」，AI 助手也得守规矩。所以它是**本地优先**的：
+
+- 默认走 **Ollama** 本地大模型流式调用，**不需要任何外部 API key**；
+- 支持 **RAG**（检索增强）：把你的业务文档喂进去，回答有依据；
+- 因为模型在你自己机器/内网跑，**数据不出网**，天然贴合上面的安全叙事。
+
+前端用 ReadableStream 做逐字渲染，体验跟 ChatGPT 一样顺滑。
+
+## 四、30 秒跑起来
+
+```bash
+cp .env.example .env      # 填 OIDC 凭据 + APP_SECRET(>=32位)
+docker compose up --build # 一键拉起 app + postgres + redis + ollama
+# 打开 http://localhost:3000
+```
+
+附带两个脚本帮你不犯错：
+- `scripts/check-env.ps1`：启动前校验配置（不打印 key 明文）；
+- `scripts/verify.sh`：冒烟测试，验证未登录访问受保护接口返回 401、限流返回 429。
+
+## 五、适合谁
+
+- **想认真学安全的全栈/安全工程师**：代码即教材，每个安全机制都可单步调试；
+- **想做开源项目的同学**：这正好是一个「功能出色 + 易上 star + 简历能写」的选题；
+- **创业团队**：直接 fork 当底座，安全地基省下几周工作量。
+
+## 六、结语 + 求 star
+
+大多数脚手架把安全当补丁，这个把它当地基。如果你也受够了「先上线再补安全」，
+欢迎试试，也欢迎提 Issue / PR。
+
+⭐ GitHub: <你的仓库地址>
+⭐ Gitee: <你的仓库地址>
+
+（配 30 秒 demo GIF：登录 → 控制台 → 审计日志 → 本地 AI 助手）
