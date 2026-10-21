@@ -79,6 +79,3 @@ git grep -nE "ghp_[A-Za-z0-9]{30,}|-----BEGIN .*PRIVATE KEY-----|[A-Za-z]:\\\\Us
 
 `tests/verify-config.test.mjs` 会校验无 UTF-8 BOM；敏感串需人工过一遍上面这条命令。
 
-## 7. 简历同步
-
-`docs/RESUME.md` 的要点可翻译后写入 LinkedIn / 简历项目经历。
