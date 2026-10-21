@@ -1,4 +1,4 @@
-﻿{
+{
   "realm": "zerotrust",
   "enabled": true,
   "sslRequired": "none",

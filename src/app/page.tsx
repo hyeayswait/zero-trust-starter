@@ -1,4 +1,4 @@
-﻿export default function Home() {
+export default function Home() {
   return (
     <main style={{ maxWidth: 760, margin: "0 auto", padding: 40 }}>
       <h1>Zero-Trust Starter Kit</h1>

@@ -1,4 +1,4 @@
-﻿export interface AuditEntry {
+export interface AuditEntry {
   actor: string;
   action: string;
   ip: string;

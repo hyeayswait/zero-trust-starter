@@ -94,6 +94,30 @@ ok("保留 jose", "jose" in pkg.dependencies);
 ok("保留 openid-client", "openid-client" in pkg.dependencies);
 ok("有 @types/pg", "@types/pg" in (pkg.devDependencies || {}));
 
+console.log("\n=== 7. 文件编码（不得有 UTF-8 BOM）===");
+{
+  // BOM 会让 webpack 的 JSON.parse 失败、也会让某些工具读错配置。
+  const { readdirSync, statSync } = require("node:fs");
+  const skip = new Set(["node_modules", ".next", ".git", "out", "data", "vendor"]);
+  const bad = [];
+  const walk = (dir) => {
+    for (const name of readdirSync(dir)) {
+      if (skip.has(name)) continue;
+      const p = join(dir, name);
+      let st;
+      try { st = statSync(p); } catch { continue; }
+      if (st.isDirectory()) { walk(p); continue; }
+      if (!/\.(json|js|mjs|ts|tsx|md|ya?ml)$/.test(name)) continue;
+      const buf = readFileSync(p);
+      if (buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf) {
+        bad.push(p.slice(ROOT.length + 1));
+      }
+    }
+  };
+  walk(ROOT);
+  ok("无文件带 UTF-8 BOM", bad.length === 0, bad.slice(0, 3).join(", "));
+}
+
 console.log("\n" + "=".repeat(54));
 console.log("结果: " + (fail === 0 ? "ALL PASS" : fail + " FAILED") + "   (pass=" + pass + ", fail=" + fail + ")");
 process.exit(fail === 0 ? 0 : 1);

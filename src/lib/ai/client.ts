@@ -1,4 +1,4 @@
-﻿// 本地优先 AI：默认走 Ollama，零外部 API key 依赖、数据不出内网
+// 本地优先 AI：默认走 Ollama，零外部 API key 依赖、数据不出内网
 const OLLAMA_URL = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
 const MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:7b";
 

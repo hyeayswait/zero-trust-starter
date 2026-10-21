@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import ChatBox from "@/components/ChatBox";
 export default function Dashboard() {

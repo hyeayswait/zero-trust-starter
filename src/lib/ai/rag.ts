@@ -1,4 +1,4 @@
-﻿// RAG 桩：把业务文档切片后做检索增强。生产可替换为 pgvector / Chroma / Qdrant。
+// RAG 桩：把业务文档切片后做检索增强。生产可替换为 pgvector / Chroma / Qdrant。
 export interface Chunk { id: string; text: string; }
 
 const STORE: Chunk[] = [];

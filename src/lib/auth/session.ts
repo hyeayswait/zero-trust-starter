@@ -1,4 +1,4 @@
-﻿import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 import type { SessionUser } from "./types";
 
 const secret = () => {

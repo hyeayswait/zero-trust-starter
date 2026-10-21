@@ -1,4 +1,4 @@
-﻿import { Issuer, type Client } from "openid-client";
+import { Issuer, type Client } from "openid-client";
 
 let _client: Client | null = null;
 

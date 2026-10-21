@@ -1,4 +1,4 @@
-﻿# 发布清单 (PUBLISH.md)
+# 发布清单 (PUBLISH.md)
 
 按步骤操作，确保「能跑、能看、能冲 star」。
 

@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { protect } from "@/lib/security/require";
 import { recentAudits } from "@/lib/audit/log";
 

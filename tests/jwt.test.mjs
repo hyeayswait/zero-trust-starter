@@ -1,4 +1,4 @@
-﻿// 真实 JWT 单测：使用 jose（与 src/lib/auth/session.ts 同一套算法）
+// 真实 JWT 单测：使用 jose（与 src/lib/auth/session.ts 同一套算法）
 // 运行: node tests/jwt.test.mjs   （需先 npm install 安装 jose）
 import { SignJWT, jwtVerify } from "jose";
 
