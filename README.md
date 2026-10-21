@@ -9,6 +9,11 @@
 
 [English](#english) | [中文](#chinese)
 
+![Demo](docs/demo.gif)
+
+<p align="center"><sub>真实运行录屏：OIDC 登录 → 控制台 → 本地 AI 助手流式回答 → 审计日志。<br>
+（由 <code>scripts/capture-demo.mjs</code> 自动抓帧生成，非合成图）</sub></p>
+
 ![Architecture](docs/architecture.png)
 
 <p align="center"><sub>架构与请求链路：每个 API 强制过 限流 → 短期令牌+设备绑定 → RBAC → 审计。<br>
