@@ -29,11 +29,9 @@ const nextConfig = {
   },
   reactStrictMode: true,
   experimental: {
-    // 部分受限环境禁止创建子进程（spawn EPERM），
-    // 强制在当前进程内完成 webpack 编译，避免 fork worker。
+    // 存在自定义 webpack 配置时 Next 默认不使用 build worker；
+    // 此处显式声明以避免在受限环境中尝试 fork 子进程。
     webpackBuildWorker: false,
-    parallelServerCompiles: false,
-    parallelServerBuildTraces: false,
   },
   // Zero-trust: never expose server internals
   poweredByHeader: false,

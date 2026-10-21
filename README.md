@@ -28,19 +28,52 @@
 - **安全头**：CSP / X-Frame-Options / Nosniff 等默认开启
 
 ### 快速开始
+
+#### 方式一：本地轻量启动（推荐，无需 Docker）
+
 ```bash
-# 1. .env 已自带本地 Keycloak 的 OIDC 配置；只需生成 APP_SECRET：
+npm install
+cp .env.demo.example .env.demo
+node scripts/run-demo.mjs
+```
+
+打开 **http://127.0.0.1:3000** ，账号 `demo`（角色 `admin,member`）。
+
+内置两个本地服务替代外部依赖，**登录、鉴权、RBAC、审计、流式输出均为真实逻辑**：
+`scripts/mock-idp.mjs`（完整 OIDC 协议 + RS256 签名）、`scripts/mock-ollama.mjs`（NDJSON 流式）。
+详见 [docs/DEMO-QUICKSTART.md](docs/DEMO-QUICKSTART.md)。
+
+#### 方式二：完整栈（Docker）
+
+```bash
+# 1. 生成 APP_SECRET 并填入 .env
 #    PowerShell:
 #    $b=New-Object byte[] 48; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)
-#    (($b|%{$_.ToString('x2')})-join '')   # 把输出粘到 .env 的 APP_SECRET
+#    (($b|%{$_.ToString('x2')})-join '')
 # 2. 启动（内置 Keycloak 自动导入 zerotrust realm，Ollama 自动拉取模型）
 docker compose up --build
-# 3. 打开 http://localhost:3000 → 用 OIDC 登录
-#    测试账号: demo / demo1234
+# 3. 打开 http://localhost:3000 → 用 OIDC 登录，测试账号 demo / demo1234
 ```
+
 > 默认 OIDC 由内置 **Keycloak** 提供，无需注册任何外部账号。
 > 若要换外部 IdP（Auth0/公司 IdP），改 `.env` 的 `OIDC_*` 三项即可。
 > Keycloak 管理台: http://localhost:8080 （admin / admin）
+
+### 已验证
+
+以下链路在 Windows + Node 20 上实测通过（服务端审计日志可逐条核对）：
+
+```
+GET  /api/auth/login       307   跳转 IdP，PKCE 授权码流程
+GET  /api/auth/callback    307   code 换 token，签发 15 分钟会话
+     [AUDIT] {"actor":"demo","action":"auth.login","ok":true}
+GET  /api/dashboard        200   需 dashboard:read 权限
+GET  /api/admin            200   需 admin:read 权限（RBAC 生效）
+POST /api/chat             200   Ollama 流式响应，逐字输出
+```
+
+`npm test` 覆盖 30 项配置与安全断言（JWT 闭环、RBAC 映射、CSP 策略、
+Cookie 属性、依赖完整性、文件编码）。
 
 ### 目录结构
 ```
@@ -49,6 +82,8 @@ src/lib/security  # 请求守卫、限流、零信任上下文校验
 src/lib/ai        # Ollama 流式客户端、RAG 桩
 src/lib/audit     # 审计日志
 src/app/api       # login/callback/logout/me/dashboard/admin/chat/health
+scripts/          # mock IdP / mock Ollama / 一键启动 / demo 抓帧
+tests/            # JWT 闭环 + 配置安全回归测试
 ```
 
 ---
@@ -65,11 +100,46 @@ src/app/api       # login/callback/logout/me/dashboard/admin/chat/health
 - **Secure headers**: CSP / X-Frame-Options / Nosniff on by default
 
 ### Quick Start
+
+#### Option 1: local lightweight mode (no Docker required)
+
 ```bash
-cp .env.example .env
-docker compose up --build
-# open http://localhost:3000
+npm install
+cp .env.demo.example .env.demo
+node scripts/run-demo.mjs
 ```
+
+Open **http://127.0.0.1:3000** , account `demo` (roles `admin,member`).
+
+Two bundled local services stand in for external dependencies, while **auth, RBAC,
+audit and streaming are the real code paths**: `scripts/mock-idp.mjs` (full OIDC
+protocol with RS256 signing) and `scripts/mock-ollama.mjs` (NDJSON streaming).
+See [docs/DEMO-QUICKSTART.md](docs/DEMO-QUICKSTART.md).
+
+#### Option 2: full stack (Docker)
+
+```bash
+cp .env.example .env      # then set APP_SECRET (>= 32 chars)
+docker compose up --build
+# open http://localhost:3000  (test account: demo / demo1234)
+```
+
+### Verified
+
+The following flow was executed on Windows + Node 20 and confirmed against the
+server-side audit log:
+
+```
+GET  /api/auth/login       307   PKCE authorization code flow
+GET  /api/auth/callback    307   code -> token, 15-minute session issued
+     [AUDIT] {"actor":"demo","action":"auth.login","ok":true}
+GET  /api/dashboard        200   requires dashboard:read
+GET  /api/admin            200   requires admin:read (RBAC enforced)
+POST /api/chat             200   Ollama streaming, token-by-token output
+```
+
+`npm test` runs 30 assertions covering JWT round-trip, RBAC mapping, CSP policy,
+cookie attributes, dependency integrity and file encoding.
 
 ### Why this gets stars
 Most starters ship auth as an afterthought. This kit makes **zero-trust the default**:
