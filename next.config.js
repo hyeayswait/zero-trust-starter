@@ -28,6 +28,13 @@ const nextConfig = {
     return config;
   },
   reactStrictMode: true,
+  experimental: {
+    // 部分受限环境禁止创建子进程（spawn EPERM），
+    // 强制在当前进程内完成 webpack 编译，避免 fork worker。
+    webpackBuildWorker: false,
+    parallelServerCompiles: false,
+    parallelServerBuildTraces: false,
+  },
   // Zero-trust: never expose server internals
   poweredByHeader: false,
   async redirects() {

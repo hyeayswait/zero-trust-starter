@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "zero-trust-starter",
   "version": "0.1.0",
   "private": true,
@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/jwt.test.mjs"
+    "test": "node tests/jwt.test.mjs && node tests/verify-config.test.mjs",
+    "test:config": "node tests/verify-config.test.mjs"
   },
   "dependencies": {
     "ioredis": "5.4.1",
