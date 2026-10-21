@@ -30,6 +30,19 @@ const nextConfig = {
   reactStrictMode: true,
   // Zero-trust: never expose server internals
   poweredByHeader: false,
+  async redirects() {
+    // Cookie 按 host 隔离：若用户从 localhost 访问、而 OIDC 回调落在 127.0.0.1，
+    // 会话 Cookie 会因域名不一致而丢失（表现为登录成功但所有 API 401）。
+    // 统一收敛到 127.0.0.1。
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "localhost" }],
+        destination: "http://127.0.0.1:3000/:path*",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

@@ -52,7 +52,7 @@ if not exist "node_modules\next" (
 
 echo [4/4] Starting services ...
 echo.
-echo   URL:     http://127.0.0.1:3000
+echo   URL:     http://127.0.0.1:3000  ^(use this exact address!^)
 echo   Account: demo  ^(roles admin,member^)
 echo   Stop:    Ctrl+C
 echo.
