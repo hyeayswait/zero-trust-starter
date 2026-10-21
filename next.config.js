@@ -1,5 +1,10 @@
 ﻿/** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 开发体验：关闭无意义的缓存告警（受限文件系统下 webpack 无法快照依赖）
+  webpack: (config, { dev }) => {
+    if (dev) config.infrastructureLogging = { level: "error" };
+    return config;
+  },
   reactStrictMode: true,
   // Zero-trust: never expose server internals
   poweredByHeader: false,
