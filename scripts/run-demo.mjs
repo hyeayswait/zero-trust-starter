@@ -6,13 +6,76 @@
 // 依次启动 mock IdP :8080、mock Ollama :11434、Next.js dev :3000，
 // 并在后台预热首页，避免第一次打开时干等编译。
 import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync, existsSync, rmSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.PORT || 3000);
 const PREWARM = !process.argv.includes("--no-prewarm");
+
+/** 递归取目录内最新 mtime */
+function newestMtime(path) {
+  let newest = 0;
+  const visit = (p) => {
+    let st;
+    try {
+      st = statSync(p);
+    } catch {
+      return;
+    }
+    if (st.isDirectory()) {
+      let entries = [];
+      try {
+        entries = readdirSync(p);
+      } catch {
+        return;
+      }
+      for (const name of entries) {
+        if (name === "node_modules" || name === ".next" || name === ".git") continue;
+        visit(join(p, name));
+      }
+    } else {
+      newest = Math.max(newest, st.mtimeMs);
+    }
+  };
+  visit(path);
+  return newest;
+}
+
+// 源码比 .next 缓存新时删掉缓存，避免「改完代码重启仍在跑旧产物」。
+function checkStaleCache() {
+  const cache = join(ROOT, ".next");
+  if (!existsSync(cache)) return;
+  let cacheTime = 0;
+  try {
+    cacheTime = statSync(cache).mtimeMs;
+  } catch {
+    return;
+  }
+  const srcTime = Math.max(
+    newestMtime(join(ROOT, "src")),
+    ...["next.config.js", "package.json", "tsconfig.json"]
+      .map((f) => {
+        try {
+          return statSync(join(ROOT, f)).mtimeMs;
+        } catch {
+          return 0;
+        }
+      })
+  );
+  if (srcTime > cacheTime) {
+    console.log("[cache] 源码已变更，清理 .next 后重新编译 ...");
+    try {
+      rmSync(cache, { recursive: true, force: true });
+    } catch {
+      console.log("[cache] 自动清理失败，请手动删除 .next 目录");
+    }
+  }
+}
+
+checkStaleCache();
+
 
 const env = { ...process.env };
 try {
