@@ -6,7 +6,7 @@
 // 依次启动 mock IdP :8080、mock Ollama :11434、Next.js dev :3000，
 // 并在后台预热首页，避免第一次打开时干等编译。
 import { spawn } from "node:child_process";
-import { readFileSync, statSync, existsSync, rmSync, readdirSync } from "node:fs";
+import { readFileSync, statSync, existsSync, rmSync, readdirSync, renameSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -82,11 +82,42 @@ try {
   const raw = readFileSync(join(ROOT, ".env.demo"), "utf8");
   for (const line of raw.split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/);
-    if (m && !(m[1] in env)) env[m[1]] = m[2].trim();
+    if (!m) continue;
+    const key = m[1];
+    const value = m[2].trim();
+    // 强制以 .env.demo 为准：项目根的 .env 是 docker compose 那套
+    // （OLLAMA_BASE_URL=http://ollama:11434 在宿主机解析不了），
+    // 若沿用 .env 的值，AI 助手和 OIDC 都会连到不存在的容器主机名。
+    env[key] = value;
   }
 } catch {
   console.error("Missing .env.demo - run: copy .env.demo.example .env.demo");
   process.exit(1);
+}
+
+// Next.js 会自动加载项目根的 .env，其中的 docker 主机名会覆盖上面的值。
+// 启动期间把它临时改名，退出时还原，保证 demo 配置生效。
+const dotenvPath = join(ROOT, ".env");
+const dotenvBackup = join(ROOT, ".env.docker-disabled");
+let dotenvMoved = false;
+if (existsSync(dotenvPath)) {
+  try {
+    renameSync(dotenvPath, dotenvBackup);
+    dotenvMoved = true;
+    console.log("[env] temporarily disabled .env (docker compose config)");
+  } catch {
+    console.log("[env] WARN could not disable .env, AI/IdP may point to docker hostnames");
+  }
+}
+
+function restoreDotenv() {
+  if (!dotenvMoved) return;
+  try {
+    renameSync(dotenvBackup, dotenvPath);
+    dotenvMoved = false;
+  } catch {
+    /* ignore */
+  }
 }
 
 const children = [];
@@ -148,7 +179,15 @@ const shutdown = () => {
   for (const c of children) {
     try { c.kill("SIGTERM"); } catch { /* ignore */ }
   }
+  restoreDotenv();
   process.exit(0);
 };
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
+// 异常退出也要还原，避免 .env 丢失
+process.on("exit", restoreDotenv);
+process.on("uncaughtException", (err) => {
+  console.error(err);
+  restoreDotenv();
+  process.exit(1);
+});
