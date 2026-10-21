@@ -1,20 +1,31 @@
 @echo off
 setlocal enabledelayedexpansion
 title Capture Demo Frames
-cd /d "D:\deepseek work\zero-trust-starter"
+cd /d "%~dp0"
 
-set "NODE_DIR=D:\deepseek work\tools\node\node-v20.18.1-win-x64"
-set "PATH=%NODE_DIR%;%PATH%"
+set "NODE_EXE="
+set "NODE_DIR="
+pushd "%~dp0.." 2>nul
+if exist "tools\node\node-v20.18.1-win-x64\node.exe" (
+  set "NODE_DIR=!CD!\tools\node\node-v20.18.1-win-x64"
+)
+popd
+if defined NODE_DIR (
+  set "NODE_EXE=!NODE_DIR!\node.exe"
+  set "PATH=!NODE_DIR!;!PATH!"
+)
+if not defined NODE_EXE (
+  for /f "delims=" %%N in ('where node 2^>nul') do if not defined NODE_EXE set "NODE_EXE=%%N"
+)
+if not defined NODE_EXE (
+  echo [ERROR] Node.js not found. Install Node 18+ from https://nodejs.org
+  goto :end
+)
 
 echo ==================================================
 echo  Capture demo frames for README
 echo ==================================================
 echo.
-
-if not exist "%NODE_DIR%\node.exe" (
-  echo [ERROR] node.exe not found: %NODE_DIR%
-  goto :end
-)
 
 echo [1/4] Checking dependencies ...
 if not exist "node_modules\next" (
@@ -26,8 +37,6 @@ if not exist "node_modules\playwright" (
   echo       installing playwright ...
   call npm i -D playwright --no-audit --no-fund
   if errorlevel 1 goto :fail
-  echo       downloading chromium ...
-  call npx playwright install chromium
 ) else (
   echo       playwright ok
 )
@@ -39,13 +48,13 @@ for %%P in (3000 8080 11434) do (
   )
 )
 
-echo [3/4] Starting local services (separate window) ...
-start "ZeroTrust Demo" cmd /c "start-demo.bat"
+echo [3/4] Starting local services in a new window ...
+start "ZeroTrust Demo" cmd /c "%~dp0start-demo.bat"
 echo       waiting 25s for Next.js to compile ...
 timeout /t 25 /nobreak >nul
 
 echo [4/4] Capturing frames ...
-node scripts\capture-demo.mjs
+"!NODE_EXE!" scripts\capture-demo.mjs
 if errorlevel 1 (
   echo.
   echo [WARN] capture reported an error, check output above.
@@ -58,7 +67,7 @@ echo.
 echo Building GIF ...
 python scripts\build_gif.py
 if errorlevel 1 (
-  echo [WARN] gif build failed, check that Pillow is installed: pip install Pillow
+  echo [WARN] gif build failed. Install Pillow: pip install Pillow
 )
 
 echo.
