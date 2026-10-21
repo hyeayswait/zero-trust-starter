@@ -2,7 +2,7 @@
 
 > 一个生产级、开箱即用的**零信任全栈脚手架**：OIDC 鉴权 + RBAC 权限 + 审计日志 + API 限流 + 内置本地优先 AI 助手。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![CI](https://github.com/hyeayswait/zero-trust-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/hyeayswait/zero-trust-starter/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 **GitHub：** https://github.com/hyeayswait/zero-trust-starter  
 **Gitee（国内镜像）：** https://gitee.com/hbaby-secover/zero-trust-starter
