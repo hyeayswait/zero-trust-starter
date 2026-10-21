@@ -10,3 +10,4 @@ __pycache__/
 
 # 抓帧中间产物保留在本地；只有 docs/demo.gif 进仓库
 docs/frames/
+out_test/

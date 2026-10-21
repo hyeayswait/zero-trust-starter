@@ -9,8 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/jwt.test.mjs && node tests/verify-config.test.mjs",
-    "test:config": "node tests/verify-config.test.mjs"
+    "test": "node tests/jwt.test.mjs && node scripts/build-policy-test.mjs && node tests/policy.test.mjs && node tests/verify-config.test.mjs",
+    "test:config": "node tests/verify-config.test.mjs",
+    "build:policy-test": "node scripts/build-policy-test.mjs",
+    "test:policy": "node scripts/build-policy-test.mjs && node tests/policy.test.mjs"
   },
   "dependencies": {
     "ioredis": "5.4.1",

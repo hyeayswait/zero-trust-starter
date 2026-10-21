@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
     deviceId,
     ip: req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown",
   };
-  const token = await signSession(user);
+  // signSession 返回 { token, jti }，jti 用于登出时撤销
+  const { token } = await signSession(user);
   await appendAudit({ actor: user.sub, action: "auth.login", ip: user.ip, ok: true });
 
   const res = NextResponse.redirect(new URL("/dashboard", req.url));

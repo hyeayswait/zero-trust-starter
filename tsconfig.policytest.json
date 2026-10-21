@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "outDir": "out_test",
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmitOnError": false,
+    "declaration": false,
+    "types": []
+  },
+  "include": ["src/lib/auth/policy.ts", "src/lib/auth/types.ts"]
+}

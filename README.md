@@ -31,6 +31,12 @@
 - **API 限流**：基于 Redis 滑动窗口
 - **内置 AI 助手**：本地优先 Ollama 流式问答，支持 RAG（数据不出内网）
 - **安全头**：CSP / X-Frame-Options / Nosniff 等默认开启
+- **会话即时撤销**：JWT 带 `jti`，登出即写入撤销表（Redis / 内存降级），旧 token 立刻失效；
+  支持按用户「踢出全部会话」（撤销水位）
+- **资源级授权**：RBAC + ABAC 混合策略，表达「只能读写自己的文档」「审计日志只可读」
+  「跨租户一律拒绝」，deny 优先、默认拒绝
+- **结构化日志 + 链路追踪**：每个请求分配 traceId（兼容 `x-request-id` / W3C `traceparent`），
+  日志输出单行 JSON，响应头回传 `x-request-id`，便于 ELK/Loki 检索
 
 ### 快速开始
 
@@ -103,6 +109,15 @@ tests/            # JWT 闭环 + 配置安全回归测试
 - **API rate limiting**: Redis-backed sliding window
 - **Built-in AI assistant**: local-first Ollama streaming chat with RAG (data stays on-prem)
 - **Secure headers**: CSP / X-Frame-Options / Nosniff on by default
+- **Instant session revocation**: JWTs carry a `jti`; logout writes it to a denylist
+  (Redis with in-memory fallback) so the token dies immediately. Also supports
+  revoking *all* sessions for a user via a revocation watermark.
+- **Resource-level authorization**: hybrid RBAC + ABAC policies expressing rules like
+  "members may only touch their own documents", "audit logs are read-only", and
+  "cross-tenant access is always denied" — deny wins, default deny.
+- **Structured logging + tracing**: every request gets a traceId (honouring
+  `x-request-id` / W3C `traceparent`), logs are single-line JSON, and the id is
+  echoed back in the `x-request-id` response header.
 
 ### Quick Start
 
