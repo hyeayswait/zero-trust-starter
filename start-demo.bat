@@ -1,32 +1,26 @@
 @echo off
-chcp 65001 >nul
-setlocal enabledelayedexpansion
+setlocal
 cd /d "D:\deepseek work\zero-trust-starter"
-
 set "NODE_DIR=D:\deepseek work\tools\node\node-v20.18.1-win-x64"
 set "PATH=%NODE_DIR%;%PATH%"
-
 echo ================================================
-echo  Zero-Trust Starter - 本地开发环境
+echo  Zero-Trust Starter - local dev environment
 echo ================================================
-echo  项目: %CD%
-echo  Node: %NODE_DIR%
+echo  Project: %CD%
+echo  Node:    %NODE_DIR%
 echo ------------------------------------------------
-
 if not exist ".env.demo" (
-  echo [1/2] 生成 .env.demo ...
+  echo [1/2] create .env.demo
   copy /y ".env.demo.example" ".env.demo" >nul
 ) else (
-  echo [1/2] .env.demo 已存在，跳过
+  echo [1/2] .env.demo exists, skip
 )
-
-echo [2/2] 启动服务（Ctrl+C 停止）...
+echo [2/2] starting services - press Ctrl+C to stop
 echo.
-echo   打开浏览器: http://127.0.0.1:3000
-echo   演示账号:   demo (角色 admin,member)
+echo   Open browser: http://127.0.0.1:3000
+echo   Demo account: demo  - roles admin,member
 echo.
 "%NODE_DIR%\node.exe" "scripts\run-demo.mjs"
-
 echo.
-echo 服务已停止。
+echo Services stopped.
 pause

@@ -65,11 +65,11 @@ function checkStaleCache() {
       })
   );
   if (srcTime > cacheTime) {
-    console.log("[cache] 源码已变更，清理 .next 后重新编译 ...");
+    console.log("[cache] sources changed, clearing .next ...");
     try {
       rmSync(cache, { recursive: true, force: true });
     } catch {
-      console.log("[cache] 自动清理失败，请手动删除 .next 目录");
+      console.log("[cache] auto-clear failed, delete .next manually");
     }
   }
 }
@@ -85,7 +85,7 @@ try {
     if (m && !(m[1] in env)) env[m[1]] = m[2].trim();
   }
 } catch {
-  console.error("缺少 .env.demo —— 先执行：copy .env.demo.example .env.demo");
+  console.error("Missing .env.demo - run: copy .env.demo.example .env.demo");
   process.exit(1);
 }
 
@@ -105,42 +105,42 @@ function start(name, args) {
 async function prewarm() {
   const url = `http://127.0.0.1:${PORT}/`;
   const deadline = Date.now() + 90_000;
-  process.stdout.write("\n等待 Next.js 就绪");
+  process.stdout.write("\nWaiting for Next.js");
   while (Date.now() < deadline) {
     try {
       await fetch(url, { method: "GET", signal: AbortSignal.timeout(60_000) });
       // 编译完成，再预热一次确保缓存命中
       await fetch(url, { signal: AbortSignal.timeout(10_000) });
-      process.stdout.write("\n首页已编译完成，浏览器打开后无需等待。\n\n");
+      process.stdout.write("\nLanding page compiled. Browser will open instantly.\n\n");
       return;
     } catch {
       process.stdout.write(".");
       await new Promise((r) => setTimeout(r, 1500));
     }
   }
-  process.stdout.write("\n（预热超时，可手动打开页面）\n\n");
+  process.stdout.write("\n(prewarm timeout, open the page manually)\n\n");
 }
 
-console.log("启动本地开发环境...");
+console.log("Starting local dev environment...");
 start("idp", ["scripts/mock-idp.mjs", "--port", "8080", "--user", "demo", "--roles", "admin,member"]);
 start("ollama", ["scripts/mock-ollama.mjs", "--port", "11434"]);
 
 await new Promise((r) => setTimeout(r, 1200));
 
-console.log("启动 Next.js ...");
+console.log("Starting Next.js ...");
 start("next", ["node_modules/next/dist/bin/next", "dev", "-p", String(PORT)]);
 
 if (PREWARM) {
   prewarm();
 } else {
   console.log("");
-  console.log("就绪后打开：http://127.0.0.1:" + PORT);
+  console.log("Open: http://127.0.0.1:" + PORT);
 }
 
 console.log("================================================");
-console.log("  地址:     http://127.0.0.1:" + PORT);
-console.log("  演示账号: demo  (角色 admin,member)");
-console.log("  停止:     Ctrl+C");
+console.log("  URL:     http://127.0.0.1:" + PORT);
+console.log("  Account: demo  (roles admin,member)");
+console.log("  Stop:    Ctrl+C");
 console.log("================================================");
 console.log("");
 
