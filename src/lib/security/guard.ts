@@ -1,5 +1,6 @@
-﻿import { NextRequest } from "next/server";
-import { verifySession, type SessionUser } from "@/lib/auth/session";
+import { NextRequest } from "next/server";
+import { verifySession } from "@/lib/auth/session";
+import type { SessionUser } from "@/lib/auth/types";
 
 // 零信任：不仅校验令牌有效，还要校验上下文（设备绑定）是否一致
 export async function getSessionFromRequest(req: NextRequest): Promise<SessionUser | null> {

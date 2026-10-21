@@ -1,14 +1,15 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/security/guard";
 import { rateLimit } from "@/lib/security/rateLimit";
-import { hasPermission, type Permission } from "@/lib/auth/types";
+import { hasPermission, type Permission, type SessionUser } from "@/lib/auth/types";
 import { appendAudit } from "@/lib/audit/log";
 
 // 统一入口：限流 + 鉴权 + 权限 + 审计
+// handler 收到的一定是已认证且已授权的用户，因此类型收窄为 SessionUser（非 null）
 export async function protect(
   req: NextRequest,
   perm: Permission,
-  handler: (user: Awaited<ReturnType<typeof getSessionFromRequest>>) => Promise<Response>
+  handler: (user: SessionUser) => Promise<Response>
 ) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
   const rl = await rateLimit(`api:${ip}`, 120, 60);

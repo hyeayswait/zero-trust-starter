@@ -65,7 +65,7 @@ bash scripts/verify.sh
 
 ---
 
-## 三、不需要 Docker 的离线测试（已在沙箱机跑通，exit 0）
+## 三、离线测试（不依赖任何外部服务，exit 0）
 
 在任意有 Python 3.9+ 的机器（含沙箱机）即可：
 ```powershell
