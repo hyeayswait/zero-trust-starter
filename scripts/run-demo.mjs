@@ -132,6 +132,43 @@ function start(name, args) {
   return p;
 }
 
+/** 检查端口是否已被监听 */
+async function isPortInUse(port) {
+  try {
+    await fetch(`http://127.0.0.1:${port}/`, {
+      signal: AbortSignal.timeout(1200),
+    });
+    return true;
+  } catch (err) {
+    // 连接被拒绝说明端口空闲；超时或其他错误视为占用
+    const msg = String(err?.cause?.code || err?.code || err?.name || "");
+    return !(msg.includes("ECONNREFUSED") || msg.includes("ConnectionRefused"));
+  }
+}
+
+/** 已在运行则复用，避免 EADDRINUSE 直接把脚本打挂 */
+async function ensureService(name, port, args, healthPath) {
+  if (await isPortInUse(port)) {
+    console.log(`[${name}] port ${port} already in use, reusing existing service`);
+    return false;
+  }
+  start(name, args);
+  // 等它起来
+  for (let i = 0; i < 20; i += 1) {
+    await new Promise((r) => setTimeout(r, 300));
+    try {
+      const r = await fetch(`http://127.0.0.1:${port}${healthPath}`, {
+        signal: AbortSignal.timeout(800),
+      });
+      if (r.ok) return true;
+    } catch {
+      /* keep waiting */
+    }
+  }
+  console.log(`[${name}] WARN not healthy on port ${port} yet`);
+  return true;
+}
+
 /** 轮询等待 Next.js 端口就绪，然后预热首页（触发编译） */
 async function prewarm() {
   const url = `http://127.0.0.1:${PORT}/`;
@@ -153,12 +190,22 @@ async function prewarm() {
 }
 
 console.log("Starting local dev environment...");
-start("idp", ["scripts/mock-idp.mjs", "--port", "8080", "--user", "demo", "--roles", "admin,member"]);
-start("ollama", ["scripts/mock-ollama.mjs", "--port", "11434"]);
-
-await new Promise((r) => setTimeout(r, 1200));
+await ensureService(
+  "idp", 8080,
+  ["scripts/mock-idp.mjs", "--port", "8080", "--user", "demo", "--roles", "admin,member"],
+  "/.well-known/openid-configuration"
+);
+await ensureService("ollama", 11434, ["scripts/mock-ollama.mjs", "--port", "11434"], "/api/tags");
 
 console.log("Starting Next.js ...");
+if (await isPortInUse(PORT)) {
+  console.log(`[next] port ${PORT} already in use.`);
+  console.log(`[next] If this is a stale process, free it with:`);
+  console.log(`       netstat -ano | findstr :${PORT}   then   taskkill /F /PID <pid>`);
+  console.log(`[next] Or run with a different port:  set PORT=3001 && node scripts/run-demo.mjs`);
+  restoreDotenv();
+  process.exit(1);
+}
 start("next", ["node_modules/next/dist/bin/next", "dev", "-p", String(PORT)]);
 
 if (PREWARM) {
